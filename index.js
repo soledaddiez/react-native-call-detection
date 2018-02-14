@@ -61,14 +61,18 @@ class CallDetectorManager {
     	NativeCallDetector && NativeCallDetector.stopListener()
     	NativeCallDetectorAndroid && NativeCallDetectorAndroid.stopListener()
         CallStateUpdateActionModule.callback = undefined
-      if(this.subscription) {
+      if (this.subscription) {
           this.subscription.removeAllListeners('PhoneCallStateUpdate');
           this.subscription = undefined
       }
     }
 
     currentCalls(currentCallsCB) {
-      NativeCallDetector && NativeCallDetector.currentCalls(currentCallsCB);
+      if (Platform.OS === 'ios') {
+        NativeCallDetector && NativeCallDetector.currentCalls(currentCallsCB);
+      } else {
+        NativeCallDetectorAndroid && NativeCallDetectorAndroid.currentCallStatus(currentCallsCB);
+      }
     }
 }
 export default module.exports = CallDetectorManager;
