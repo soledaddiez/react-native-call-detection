@@ -9,9 +9,12 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeMap;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -54,6 +57,34 @@ public class CallDetectionManagerModule
                 PhoneStateListener.LISTEN_NONE);
         telephonyManager = null;
         callDetectionPhoneStateListener = null;
+    }
+
+    @ReactMethod
+    public void currentCallStatus(Callback statusCallback) {
+      int state = telephonyManager.getCallState();
+      String stateLabel = "";
+      switch (state) {
+          //Hangup
+          case TelephonyManager.CALL_STATE_IDLE:
+            // Device call state: No activity.
+            stateLabel = "Idle";
+            break;
+          //Outgoing
+          case TelephonyManager.CALL_STATE_OFFHOOK:
+            //Device call state: Off-hook. At least one call exists that is dialing, active, or on hold, and no calls are ringing or waiting.
+            stateLabel = "Offhook";
+            break;
+          //Incoming
+          case TelephonyManager.CALL_STATE_RINGING:
+            stateLabel = "Ringing";
+            break;
+      }
+      WritableMap stateMap = new WritableNativeMap();
+      stateMap.putString("callState", stateLabel);
+      WritableArray stateArray = new WritableNativeArray();
+      stateArray.pushMap(stateMap);
+
+      statusCallback.invoke(null, stateArray);
     }
 
     /**
@@ -118,10 +149,10 @@ public class CallDetectionManagerModule
             case TelephonyManager.CALL_STATE_IDLE:
                 if(wasAppInRinging == true ) {
                     if(wasAppInOffHook == true) {
-                        jsModule.callStateUpdated("Disconnected", null);
+                        jsModule.callStateUpdated("Disconnected", phoneNumber);
 
                     } else {
-                        jsModule.callStateUpdated("Missed", null);
+                        jsModule.callStateUpdated("Missed", phoneNumber);
                     }
                 }
                 wasAppInRinging = false;
@@ -132,7 +163,7 @@ public class CallDetectionManagerModule
             case TelephonyManager.CALL_STATE_OFFHOOK:
                 //Device call state: Off-hook. At least one call exists that is dialing, active, or on hold, and no calls are ringing or waiting.
                 wasAppInOffHook = true;
-                jsModule.callStateUpdated("Offhook", null);
+                jsModule.callStateUpdated("Offhook", phoneNumber);
                 break;
             //Incoming
             case TelephonyManager.CALL_STATE_RINGING:
