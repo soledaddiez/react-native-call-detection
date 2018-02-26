@@ -116,10 +116,16 @@ public class CallDetectionManagerModule
 
     @Override
     public void onActivityResumed(Activity activity) {
-        if (wasAppInOffHook && jsModule != null) {
-            wasAppInOffHook = false;
-            jsModule.callStateUpdated("Disconnected", null);
+      if (wasAppInOffHook && jsModule != null) {
+        TelephonyManager tManager =
+          (TelephonyManager) this.reactContext.getSystemService(Context.TELEPHONY_SERVICE);
+        int state = tManager.getCallState();
+        Log.d("CallDetectionManager", "Current State is " + state);
+        if (state == TelephonyManager.CALL_STATE_IDLE) {
+          wasAppInOffHook = false;
+          jsModule.callStateUpdated("Disconnected", null);
         }
+      }
     }
 
     @Override
@@ -145,17 +151,16 @@ public class CallDetectionManagerModule
     @Override
     public void phoneCallStateUpdated(int state, String phoneNumber) {
         jsModule = this.reactContext.getJSModule(CallStateUpdateActionModule.class);
-
+        Log.d("CallDetectionManager", "The state is " + state);
         switch (state) {
             //Hangup
             case TelephonyManager.CALL_STATE_IDLE:
-                if(wasAppInRinging == true ) {
-                    if(wasAppInOffHook == true) {
-                        jsModule.callStateUpdated("Disconnected", phoneNumber);
-
-                    } else {
-                        jsModule.callStateUpdated("Missed", phoneNumber);
-                    }
+                if(wasAppInOffHook == true) {
+                  jsModule.callStateUpdated("Disconnected", phoneNumber);
+                } else {
+                  if(wasAppInRinging == true) {
+                    jsModule.callStateUpdated("Missed", phoneNumber);
+                  }
                 }
                 wasAppInRinging = false;
                 wasAppInOffHook = false;
@@ -165,7 +170,9 @@ public class CallDetectionManagerModule
             case TelephonyManager.CALL_STATE_OFFHOOK:
                 //Device call state: Off-hook. At least one call exists that is dialing, active, or on hold, and no calls are ringing or waiting.
                 wasAppInOffHook = true;
-                jsModule.callStateUpdated("Offhook", phoneNumber);
+                if(wasAppInRinging) {
+                  jsModule.callStateUpdated("Offhook", phoneNumber);
+                }
                 break;
             //Incoming
             case TelephonyManager.CALL_STATE_RINGING:
@@ -173,6 +180,9 @@ public class CallDetectionManagerModule
                 wasAppInRinging = true;
                 jsModule.callStateUpdated("Incoming", phoneNumber);
                 break;
+            default:
+              Log.d("CallDetectionManager", "Unknown State " + Integer.toString(state));
+              break;
         }
     }
 }
