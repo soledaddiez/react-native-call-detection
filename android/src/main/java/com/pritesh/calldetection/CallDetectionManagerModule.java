@@ -170,9 +170,7 @@ public class CallDetectionManagerModule
             case TelephonyManager.CALL_STATE_OFFHOOK:
                 //Device call state: Off-hook. At least one call exists that is dialing, active, or on hold, and no calls are ringing or waiting.
                 wasAppInOffHook = true;
-                if(wasAppInRinging) {
-                  jsModule.callStateUpdated("Offhook", phoneNumber);
-                }
+                jsModule.callStateUpdated("Offhook", phoneNumber);
                 break;
             //Incoming
             case TelephonyManager.CALL_STATE_RINGING:
