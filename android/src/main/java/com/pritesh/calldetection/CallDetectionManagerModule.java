@@ -157,14 +157,12 @@ public class CallDetectionManagerModule
             case TelephonyManager.CALL_STATE_IDLE:
                 if(wasAppInOffHook == true) {
                   jsModule.callStateUpdated("Disconnected", phoneNumber);
-                } else {
-                  if(wasAppInRinging == true) {
-                    jsModule.callStateUpdated("Missed", phoneNumber);
-                  }
+                } else if(wasAppInRinging == true) {
+                  jsModule.callStateUpdated("Missed", phoneNumber);
                 }
+                //reset device state
                 wasAppInRinging = false;
                 wasAppInOffHook = false;
-                // Device call state: No activity.
                 break;
             //Outgoing
             case TelephonyManager.CALL_STATE_OFFHOOK:
