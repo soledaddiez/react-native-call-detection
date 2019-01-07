@@ -152,12 +152,18 @@ public class CallDetectionManagerModule
     public void phoneCallStateUpdated(int state, String phoneNumber) {
         jsModule = this.reactContext.getJSModule(CallStateUpdateActionModule.class);
         Log.d("CallDetectionManager", "The state is " + state);
+
+        TelephonyManager tManager =
+          (TelephonyManager) this.reactContext.getSystemService(Context.TELEPHONY_SERVICE);
+
+        Log.d("CallDetectionManager", "-> HAS CARRIER PRIVILEGES " + tManager.hasCarrierPrivileges());
+
         switch (state) {
             //Hangup
             case TelephonyManager.CALL_STATE_IDLE:
-                if(wasAppInOffHook == true) {
+                if(wasAppInOffHook == true) { // if there was an ongoing call and the call state switches to idle, the call must have gotten disconnected
                   jsModule.callStateUpdated("Disconnected", phoneNumber);
-                } else if(wasAppInRinging == true) {
+                } else if(wasAppInRinging == true) { // if the phone was ringing but there was no actual ongoing call, it must have gotten missed
                   jsModule.callStateUpdated("Missed", phoneNumber);
                 }
                 //reset device state
