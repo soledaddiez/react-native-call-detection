@@ -17,12 +17,26 @@ const NativeCallDetectorAndroid = NativeModules.CallDetectionManagerAndroid
 var CallStateUpdateActionModule = require('./CallStateUpdateActionModule')
 BatchedBridge.registerCallableModule('CallStateUpdateActionModule', CallStateUpdateActionModule)
 
+// const requestPermissionsAndroid = async (permissionMessage) => {
+//       await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE)
+//       .then(async (gotPermission) => gotPermission
+//           ? true
+//           : await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE, permissionMessage)
+//               .then((result) => result === PermissionsAndroid.RESULTS.GRANTED)
+//         )
+// }
+
 const requestPermissionsAndroid = async (permissionMessage) => {
-      await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE)
-      .then(async (gotPermission) => gotPermission
+  const checkPermissionPhoneState = PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE);
+  const checkPermissionCallLog = PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_CALL_LOG);
+
+  await Promise.all([checkPermissionPhoneState, checkPermissionCallLog])
+    .then(async ([gotPermissionPhoneState, gotPermissionCallLog]) => (gotPermissionPhoneState && gotPermissionCallLog)
           ? true
-          : await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE, permissionMessage)
-              .then((result) => result === PermissionsAndroid.RESULTS.GRANTED)
+          : await PermissionsAndroid.requestMultiple(
+            [PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE, PermissionsAndroid.PERMISSIONS.READ_CALL_LOG],
+            // permissionMessage
+          ).then((result) => result === PermissionsAndroid.RESULTS.GRANTED)
         )
 }
 
