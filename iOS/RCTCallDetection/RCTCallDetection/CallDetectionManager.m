@@ -43,6 +43,10 @@ typedef void (^CallBack)();
     return @[@"PhoneCallStateUpdate"];
 }
 
++ (BOOL)requiresMainQueueSetup {
+    return YES;
+}
+
 RCT_EXPORT_MODULE()
 
 RCT_EXPORT_METHOD(addCallBlock:(RCTResponseSenderBlock) block) {
