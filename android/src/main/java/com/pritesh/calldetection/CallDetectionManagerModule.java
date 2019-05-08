@@ -152,7 +152,12 @@ public class CallDetectionManagerModule
     public void phoneCallStateUpdated(int state, String phoneNumber) {
         jsModule = this.reactContext.getJSModule(CallStateUpdateActionModule.class);
         Log.d("CallDetectionManager", "The state is " + state);
-        
+
+        TelephonyManager tManager =
+          (TelephonyManager) this.reactContext.getSystemService(Context.TELEPHONY_SERVICE);
+
+        Log.d("CallDetectionManager", "-> HAS CARRIER PRIVILEGES " + tManager.hasCarrierPrivileges());
+
         switch (state) {
             //Hangup
             case TelephonyManager.CALL_STATE_IDLE:
