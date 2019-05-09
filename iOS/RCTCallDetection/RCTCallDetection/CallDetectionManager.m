@@ -88,10 +88,10 @@ RCT_EXPORT_METHOD(currentCalls:(RCTResponseSenderBlock)_callback) {
 
     [_callCenter setCallEventHandler:^(CTCall *call) {
         [self sendEventWithName:@"PhoneCallStateUpdate"
-                                                     body:[self.eventNameMap objectForKey: call.callState]];
+                                                     body:@{@"callID": call.callID, @"callState": [self.eventNameMap objectForKey: call.callState ]}];
     }];
     [self sendEventWithName:@"PhoneCallStateUpdate"
-                                                     body:[self.eventNameMap objectForKey: call.callState]];
+                                                     body:@{@"callID": call.callID, @"callState": [self.eventNameMap objectForKey: call.callState ]}];
 }
 
 @end

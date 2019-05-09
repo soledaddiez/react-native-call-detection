@@ -38,7 +38,7 @@ class CallDetectorManager {
         if (Platform.OS === 'ios') {
             NativeCallDetector && NativeCallDetector.startListener()
             this.subscription = new NativeEventEmitter(NativeCallDetector)
-            this.subscription.addListener('PhoneCallStateUpdate', callback);
+            this.subscription.addListener('PhoneCallStateUpdate', ({ callID, callState }) => callback(callState, { callID }));
         }
         else {
             if(NativeCallDetectorAndroid) {
