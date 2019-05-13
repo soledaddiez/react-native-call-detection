@@ -6,28 +6,23 @@ import {
   NativeEventEmitter,
   Platform,
   PermissionsAndroid
-} from 'react-native';
-export const permissionDenied = 'PERMISSION DENIED';
+} from 'react-native'
+export const permissionDenied = 'PERMISSION DENIED'
 
-const BatchedBridge = require('react-native/Libraries/BatchedBridge/BatchedBridge');
+const BatchedBridge = require('react-native/Libraries/BatchedBridge/BatchedBridge')
 
-const NativeCallDetector = NativeModules.CallDetectionManager;
-const NativeCallDetectorAndroid = NativeModules.CallDetectionManagerAndroid;
+const NativeCallDetector = NativeModules.CallDetectionManager
+const NativeCallDetectorAndroid = NativeModules.CallDetectionManagerAndroid
 
-var CallStateUpdateActionModule = require('./CallStateUpdateActionModule');
-BatchedBridge.registerCallableModule('CallStateUpdateActionModule', CallStateUpdateActionModule);
+var CallStateUpdateActionModule = require('./CallStateUpdateActionModule')
+BatchedBridge.registerCallableModule('CallStateUpdateActionModule', CallStateUpdateActionModule)
 
 const requestPermissionsAndroid = async (permissionMessage) => {
-  const checkPermissionPhoneState = PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE);
-  const checkPermissionCallLog = PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_CALL_LOG);
-
-  await Promise.all([checkPermissionPhoneState, checkPermissionCallLog])
-    .then(async ([gotPermissionPhoneState, gotPermissionCallLog]) => (gotPermissionPhoneState && gotPermissionCallLog)
+      await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE)
+      .then(async (gotPermission) => gotPermission
           ? true
-          : await PermissionsAndroid.requestMultiple(
-            [PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE, PermissionsAndroid.PERMISSIONS.READ_CALL_LOG],
-            // permissionMessage
-          ).then((result) => result === PermissionsAndroid.RESULTS.GRANTED)
+          : await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_PHONE_STATE, permissionMessage)
+              .then((result) => result === PermissionsAndroid.RESULTS.GRANTED)
         )
 }
 
@@ -35,7 +30,7 @@ class CallDetectorManager {
 
     subscription;
     callback
-    constructor(callback, readPhoneNumberAndroid = false, permissionDeniedCallback = () => {}, permissionMessage = {
+    constructor(callback, readPhoneNumberAndroid = false, permissionDeniedCallback = ()=>{}, permissionMessage = {
       title: 'Phone State Permission',
       message: 'This app needs access to your phone state in order to react and/or to adapt to incoming calls.'
     }) {
@@ -43,7 +38,7 @@ class CallDetectorManager {
         if (Platform.OS === 'ios') {
             NativeCallDetector && NativeCallDetector.startListener()
             this.subscription = new NativeEventEmitter(NativeCallDetector)
-            this.subscription.addListener('PhoneCallStateUpdate', callback);
+            this.subscription.addListener('PhoneCallStateUpdate', ({ callID, callState }) => callback(callState, { callID }));
         }
         else {
             if(NativeCallDetectorAndroid) {
