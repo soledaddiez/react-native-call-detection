@@ -14,5 +14,5 @@ Pod::Spec.new do |s|
                             "iOS/RCTCallDetection/RCTCallDetection/*.m"]
   
   s.platform            = :ios, "7.0"
-  s.dependency 'React'
+  s.dependency 'React-Core'
 end
