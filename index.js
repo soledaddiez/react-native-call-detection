@@ -11,8 +11,9 @@ export const permissionDenied = 'PERMISSION DENIED'
 
 const BatchedBridge = require('react-native/Libraries/BatchedBridge/BatchedBridge')
 
-const NativeCallDetector = NativeModules.CallDetectionManager
-const NativeCallDetectorAndroid = NativeModules.CallDetectionManagerAndroid
+const NativeCallDetector = NativeModules.CallDetectionManager;
+const CallObserverManager = NativeModules.CallObserverManager;
+const NativeCallDetectorAndroid = NativeModules.CallDetectionManagerAndroid;
 
 var CallStateUpdateActionModule = require('./CallStateUpdateActionModule')
 BatchedBridge.registerCallableModule('CallStateUpdateActionModule', CallStateUpdateActionModule)
@@ -36,9 +37,15 @@ class CallDetectorManager {
     }) {
         this.callback = callback
         if (Platform.OS === 'ios') {
-            NativeCallDetector && NativeCallDetector.startListener()
-            this.subscription = new NativeEventEmitter(NativeCallDetector)
-            this.subscription.addListener('PhoneCallStateUpdate', ({ callID, callState }) => callback(callState, { callID }));
+          // const iosVersion = parseInt(Platform.Version, 10);
+          // if (iosVersion < 10) {
+            NativeCallDetector && NativeCallDetector.startListener();
+            this.subscription = new NativeEventEmitter(NativeCallDetector);
+          // } else {
+          //   // NativeCallObserver && NativeCallObserver.startListener() // addListener()
+          //   this.subscription = new NativeEventEmitter(CallObserverManager);
+          // }
+          this.subscription.addListener('PhoneCallStateUpdate', ({ callID, callState }) => callback(callState, { callID }));
         }
         else {
             if(NativeCallDetectorAndroid) {
