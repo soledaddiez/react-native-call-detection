@@ -18,8 +18,7 @@
 #import <React/RCTEventEmitter.h>
 #endif
 #import <Foundation/Foundation.h>
-#import <CoreTelephony/CTCallCenter.h>
-#import <CoreTelephony/CTCall.h>
+#import <CallKit/CallKit.h>
 
-@interface CallDetectionManager : RCTEventEmitter <RCTBridgeModule>
+@interface CallDetectionManager : RCTEventEmitter <RCTBridgeModule, CXCallObserverDelegate>
 @end

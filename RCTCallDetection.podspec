@@ -13,6 +13,6 @@ Pod::Spec.new do |s|
   s.source_files        = [ "iOS/RCTCallDetection/RCTCallDetection/*.h",
                             "iOS/RCTCallDetection/RCTCallDetection/*.m"]
   
-  s.platform            = :ios, "7.0"
+  s.platform            = :ios, "10.0"
   s.dependency 'React-Core'
 end

@@ -7,28 +7,17 @@
 //
 
 #import "CallDetectionManager.h"
-@import CoreTelephony;
+@import CallKit;
 
 typedef void (^CallBack)();
 @interface CallDetectionManager()
 
 @property(strong, nonatomic) RCTResponseSenderBlock block;
-@property(strong, nonatomic, nonnull) CTCallCenter *callCenter;
+@property(strong, nonatomic) CXCallObserver* callObserver;
 
 @end
 
 @implementation CallDetectionManager
-
-- (NSDictionary *)eventNameMap
-{
-  return @{
-   CTCallStateConnected    : @"Connected",
-   CTCallStateDialing      : @"Dialing",
-   CTCallStateDisconnected : @"Disconnected",
-   CTCallStateIncoming     : @"Incoming"
-   };
-}
-
 - (NSDictionary *)constantsToExport
 {
     return @{
@@ -52,46 +41,62 @@ RCT_EXPORT_MODULE()
 RCT_EXPORT_METHOD(addCallBlock:(RCTResponseSenderBlock) block) {
   // Setup call tracking
   self.block = block;
-  self.callCenter = [[CTCallCenter alloc] init];
+  self.callObserver = [[CXCallObserver alloc] init];
   __typeof(self) weakSelf = self;
-  self.callCenter.callEventHandler = ^(CTCall *call) {
-    [weakSelf handleCall:call];
-  };
+  [self.callObserver setDelegate:weakSelf queue:nil];
 }
 
 RCT_EXPORT_METHOD(startListener) {
     // Setup call tracking
-    self.callCenter = [[CTCallCenter alloc] init];
+    self.callObserver = [[CXCallObserver alloc] init];
     __typeof(self) weakSelf = self;
-    self.callCenter.callEventHandler = ^(CTCall *call) {
-        [weakSelf handleCall:call];
-    };
+    [self.callObserver setDelegate:weakSelf queue:nil];
 }
 
 RCT_EXPORT_METHOD(stopListener) {
     // Setup call tracking
-    self.callCenter = nil;
+    self.callObserver = nil;
 }
 
 RCT_EXPORT_METHOD(currentCalls:(RCTResponseSenderBlock)_callback) {
-    CTCallCenter *ctCallCenter = [[CTCallCenter alloc] init]; // using my own callCenter to avoid interferrence with event listeners
+    CXCallObserver *callObserver = [[CXCallObserver alloc] init]; // using my own callObserver to avoid interferrence with event listeners
     NSMutableArray<NSDictionary *> *calls = [[NSMutableArray alloc] init];
 
-    for (CTCall *currentCall in ctCallCenter.currentCalls) {
-        [calls addObject:@{@"callID": currentCall.callID, @"callState": [self.eventNameMap objectForKey: currentCall.callState ]}];
+    for (CXCall *aCall in callObserver.calls) {
+        NSString * status = @"Disconnected";
+        if (aCall.hasEnded == true) {
+            status = @"Disconnected";
+        } else {
+            if (aCall.hasConnected == true) {
+                status = @"Connected";
+            } else {
+                if (aCall.isOutgoing == true) {
+                    status = @"Dialing";
+                } else {
+                    status = @"Incoming";
+                }
+            }
+        }
+        [calls addObject:@{@"callID": [aCall.UUID UUIDString], @"callState": [self.constantsToExport valueForKey:status]}];
     }
     _callback(@[[NSNull null], calls]);
 }
 
-- (void)handleCall:(CTCall *)call {
-    _callCenter = [[CTCallCenter alloc] init];
+- (void)callObserver:(CXCallObserver *)callObserver callChanged:(CXCall *)call {
 
-    [_callCenter setCallEventHandler:^(CTCall *call) {
-        [self sendEventWithName:@"PhoneCallStateUpdate"
-                                                     body:@{@"callID": call.callID, @"callState": [self.eventNameMap objectForKey: call.callState ]}];
-    }];
-    [self sendEventWithName:@"PhoneCallStateUpdate"
-                                                     body:@{@"callID": call.callID, @"callState": [self.eventNameMap objectForKey: call.callState ]}];
+    NSString * callUUID = [call.UUID UUIDString];
+    if (call.hasEnded == true) {
+        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": [self.constantsToExport valueForKey:@"Disconnected"]}];
+    }
+    if (call.isOutgoing == true && call.hasConnected == false && call.hasEnded == false) {
+        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": [self.constantsToExport valueForKey:@"Dialing"]}];
+    }
+    if (call.isOutgoing == false && call.hasConnected == false) {
+        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": [self.constantsToExport valueForKey:@"Incoming"]}];
+    }
+    if (call.hasEnded == false && call.hasConnected == true) {
+        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": [self.constantsToExport valueForKey:@"Connected"]}];
+    }
 }
 
 @end
