@@ -63,7 +63,7 @@ RCT_EXPORT_METHOD(currentCalls:(RCTResponseSenderBlock)_callback) {
     NSMutableArray<NSDictionary *> *calls = [[NSMutableArray alloc] init];
 
     for (CXCall *aCall in callObserver.calls) {
-        NSString * status = "@Disconnected";
+        NSString * status = @"Disconnected";
         if (aCall.hasEnded == true) {
             status = @"Disconnected";
         } else {
@@ -77,7 +77,7 @@ RCT_EXPORT_METHOD(currentCalls:(RCTResponseSenderBlock)_callback) {
                 }
             }
         }
-        [calls addObject:@{@"callID": [aCall.UUID UUIDString], @"callState": [constantsToExport valueForKey:status]}];
+        [calls addObject:@{@"callID": [aCall.UUID UUIDString], @"callState": [self.constantsToExport valueForKey:status]}];
     }
     _callback(@[[NSNull null], calls]);
 }
@@ -86,16 +86,16 @@ RCT_EXPORT_METHOD(currentCalls:(RCTResponseSenderBlock)_callback) {
 
     NSString * callUUID = [call.UUID UUIDString];
     if (call.hasEnded == true) {
-        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": [constantsToExport valueForKey:@"Disconnected"]}];
+        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": [self.constantsToExport valueForKey:@"Disconnected"]}];
     }
     if (call.isOutgoing == true && call.hasConnected == false && call.hasEnded == false) {
-        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": [constantsToExport valueForKey:@"Dialing"]}];
+        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": [self.constantsToExport valueForKey:@"Dialing"]}];
     }
     if (call.isOutgoing == false && call.hasConnected == false) {
-        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": [constantsToExport valueForKey:@"Incoming"]}];
+        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": [self.constantsToExport valueForKey:@"Incoming"]}];
     }
     if (call.hasEnded == false && call.hasConnected == true) {
-        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": [constantsToExport valueForKey:@"Connected"]}];
+        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": [self.constantsToExport valueForKey:@"Connected"]}];
     }
 }
 
