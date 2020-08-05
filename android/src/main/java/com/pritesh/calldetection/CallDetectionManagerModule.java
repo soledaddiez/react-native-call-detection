@@ -31,6 +31,7 @@ public class CallDetectionManagerModule
     private TelephonyManager telephonyManager;
     private CallStateUpdateActionModule jsModule = null;
     private CallDetectionPhoneStateListener callDetectionPhoneStateListener;
+    private Activity activity = null;
 
     public CallDetectionManagerModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -44,6 +45,11 @@ public class CallDetectionManagerModule
 
     @ReactMethod
     public void startListener() {
+        if (activity == null) {
+            activity = getCurrentActivity();
+            activity.getApplication().registerActivityLifecycleCallbacks(this);
+        }
+
         telephonyManager = (TelephonyManager) this.reactContext.getSystemService(
                 Context.TELEPHONY_SERVICE);
         callDetectionPhoneStateListener = new CallDetectionPhoneStateListener(this);

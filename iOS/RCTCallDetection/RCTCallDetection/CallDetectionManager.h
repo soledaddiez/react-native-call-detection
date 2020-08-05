@@ -3,6 +3,7 @@
 //
 //
 //  Created by Pritesh Nandgaonkar on 16/06/17.
+//  Updated by Doug Watkins for Inside Real Estate on 31/07/19
 //  Copyright © 2017 Facebook. All rights reserved.
 //
 //

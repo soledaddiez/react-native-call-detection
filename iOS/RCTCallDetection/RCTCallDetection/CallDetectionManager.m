@@ -3,6 +3,7 @@
 //
 //
 //  Created by Pritesh Nandgaonkar on 16/06/17.
+//  Updated by Doug Watkins for Inside Real Estate on 31/07/19
 //  Copyright © 2017 Facebook. All rights reserved.
 //
 
@@ -16,18 +17,7 @@ typedef void (^CallBack)();
 @property(strong, nonatomic) CXCallObserver* callObserver;
 
 @end
-
 @implementation CallDetectionManager
-- (NSDictionary *)constantsToExport
-{
-    return @{
-             @"Connected"   : @"Connected",
-             @"Dialing"     : @"Dialing",
-             @"Disconnected": @"Disconnected",
-             @"Incoming"    : @"Incoming"
-             };
-}
-
 - (NSArray<NSString *> *)supportedEvents {
     return @[@"PhoneCallStateUpdate"];
 }
@@ -61,7 +51,6 @@ RCT_EXPORT_METHOD(stopListener) {
 RCT_EXPORT_METHOD(currentCalls:(RCTResponseSenderBlock)_callback) {
     CXCallObserver *callObserver = [[CXCallObserver alloc] init]; // using my own callObserver to avoid interferrence with event listeners
     NSMutableArray<NSDictionary *> *calls = [[NSMutableArray alloc] init];
-
     for (CXCall *aCall in callObserver.calls) {
         NSString * status = @"Disconnected";
         if (aCall.hasEnded == true) {
@@ -77,25 +66,23 @@ RCT_EXPORT_METHOD(currentCalls:(RCTResponseSenderBlock)_callback) {
                 }
             }
         }
-        [calls addObject:@{@"callID": [aCall.UUID UUIDString], @"callState": [self.constantsToExport valueForKey:status]}];
+        [calls addObject:@{@"callID": [aCall.UUID UUIDString], @"callState": status}];
     }
     _callback(@[[NSNull null], calls]);
 }
-
 - (void)callObserver:(CXCallObserver *)callObserver callChanged:(CXCall *)call {
-
     NSString * callUUID = [call.UUID UUIDString];
     if (call.hasEnded == true) {
-        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": [self.constantsToExport valueForKey:@"Disconnected"]}];
+        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": @"Disconnected"}];
     }
     if (call.isOutgoing == true && call.hasConnected == false && call.hasEnded == false) {
-        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": [self.constantsToExport valueForKey:@"Dialing"]}];
+        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": @"Dialing"}];
     }
     if (call.isOutgoing == false && call.hasConnected == false) {
-        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": [self.constantsToExport valueForKey:@"Incoming"]}];
+        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": @"Incoming"}];
     }
     if (call.hasEnded == false && call.hasConnected == true) {
-        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": [self.constantsToExport valueForKey:@"Connected"]}];
+        [self sendEventWithName:@"PhoneCallStateUpdate" body:@{@"callID": callUUID, @"callState": @"Connected"}];
     }
 }
 
